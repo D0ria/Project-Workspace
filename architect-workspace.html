@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architect Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0C16;
+  --bg-elevated:#10131F;
+  --panel:rgba(255,255,255,0.045);
+  --panel-border:rgba(150,140,255,0.16);
+  --grid-line:rgba(150,140,255,0.06);
+  --ink:#E7E6F5;
+  --ink-dim:#9C9BB8;
+  --ink-faint:#5D5C79;
+  --accent:#8B7FFF;
+  --accent-soft:rgba(139,127,255,0.14);
+  --accent-2:#4FD9C9;
+  --amber:#F2A65A;
+  --rose:#F16C82;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius:14px;
+}
+[data-theme="light"]{
+  --bg:#EEF0F6;
+  --bg-elevated:#F7F8FC;
+  --panel:rgba(20,20,40,0.035);
+  --panel-border:rgba(70,60,160,0.14);
+  --grid-line:rgba(70,60,160,0.07);
+  --ink:#1B1D2E;
+  --ink-dim:#57597A;
+  --ink-faint:#9799B3;
+  --accent:#6C5CE7;
+  --accent-soft:rgba(108,92,231,0.10);
+  --accent-2:#1FA898;
+  --amber:#C97A2B;
+  --rose:#C74D63;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 1px 1px, var(--grid-line) 1px, transparent 0) 0 0/28px 28px,
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  min-height:100vh;
+  padding-bottom:80px;
+  transition:background .3s ease,color .3s ease;
+}
+::selection{background:var(--accent-soft);color:var(--accent);}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:14px;
+  padding:12px 24px;
+  background:var(--bg-elevated);
+  border-bottom:1px solid var(--panel-border);
+  backdrop-filter:blur(10px);
+  flex-wrap:wrap;
+}
+.brand{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:15px;
+  letter-spacing:.02em;
+  display:flex;align-items:center;gap:8px;
+  margin-right:auto;
+  color:var(--ink);
+}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+.brand small{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);font-weight:400;}
+.btn{
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  letter-spacing:.02em;
+  padding:8px 13px;
+  border-radius:9px;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  color:var(--ink-dim);
+  cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:.15s ease;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--accent);color:var(--ink);background:var(--accent-soft);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#0A0C16;font-weight:600;}
+.btn.primary:hover{filter:brightness(1.08);color:#0A0C16;}
+.save-status{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);white-space:nowrap;}
+.save-status.on{color:var(--accent-2);}
+#fileInput{display:none;}
+
+/* ---------- title block ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px;}
+.titleblock{
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  padding:22px 26px;
+  margin-bottom:26px;
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:20px;
+  position:relative;
+}
+.titleblock::before,.titleblock::after,
+.corner-tl,.corner-br{content:'';position:absolute;width:14px;height:14px;border:2px solid var(--accent);opacity:.55;}
+.titleblock::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
+.titleblock::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
+.tb-field label{
+  display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;
+  color:var(--ink-faint);text-transform:uppercase;margin-bottom:6px;
+}
+.tb-field input,.tb-field select{
+  width:100%;background:transparent;border:none;border-bottom:1px solid var(--panel-border);
+  color:var(--ink);font-family:var(--font-display);font-size:16px;font-weight:600;
+  padding:4px 0 6px;outline:none;
+}
+.tb-field select{cursor:pointer;font-size:14px;}
+.tb-field input:focus,.tb-field select:focus{border-bottom-color:var(--accent);}
+.tb-field.wide input{font-size:19px;}
+
+/* ---------- sections ---------- */
+.section{
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  margin-bottom:16px;
+  overflow:visible;
+  position:relative;
+}
+.section-head{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;
+  border-bottom:1px solid var(--panel-border);
+}
+.section-num{
+  font-family:var(--font-mono);font-size:11px;color:var(--accent);
+  border:1px solid var(--panel-border);border-radius:6px;padding:2px 7px;
+}
+.section-icon{font-size:16px;}
+.section-title{
+  font-family:var(--font-display);font-weight:600;font-size:14.5px;
+  letter-spacing:.01em;margin-right:auto;
+}
+.info-icon{
+  width:17px;height:17px;border-radius:50%;
+  border:1px solid var(--ink-faint);color:var(--ink-faint);
+  font-family:var(--font-mono);font-size:10.5px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:help;position:relative;flex-shrink:0;
+}
+.info-icon:hover{border-color:var(--accent);color:var(--accent);}
+.info-icon .tip{
+  display:none;position:absolute;right:0;top:24px;z-index:30;
+  width:250px;background:var(--bg-elevated);border:1px solid var(--accent);
+  border-radius:8px;padding:10px 12px;color:var(--ink-dim);
+  font-family:var(--font-body);font-size:12px;line-height:1.5;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+.info-icon:hover .tip{display:block;}
+.section-body{padding:16px 18px;}
+.section-body textarea{
+  width:100%;min-height:90px;background:transparent;border:none;outline:none;
+  resize:vertical;color:var(--ink);font-family:var(--font-body);font-size:13.5px;line-height:1.6;
+}
+.section-body textarea::placeholder{color:var(--ink-faint);}
+.print-mirror{display:none;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.two-col,.titleblock{grid-template-columns:1fr;}}
+
+/* ---------- diagram ---------- */
+.diagram-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.diagram-wrap{grid-template-columns:1fr;}}
+#diagramOut{
+  border:1px dashed var(--panel-border);border-radius:10px;
+  min-height:120px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg-elevated);padding:10px;
+}
+#diagramOut svg text{font-family:var(--font-mono);}
+.diagram-hint{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-top:8px;}
+
+/* ---------- matrix ---------- */
+.matrix-wrap{overflow-x:auto;}
+table.matrix{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px;}
+table.matrix th,table.matrix td{
+  border:1px solid var(--panel-border);padding:8px 10px;text-align:center;white-space:nowrap;
+}
+table.matrix th{color:var(--ink-dim);font-weight:500;position:relative;}
+table.matrix th input{
+  background:transparent;border:none;color:var(--ink);font-family:var(--font-display);
+  font-weight:600;font-size:12.5px;text-align:center;width:100%;outline:none;
+}
+table.matrix td.crit-label{text-align:left;}
+table.matrix td.crit-label input{
+  background:transparent;border:none;color:var(--ink);font-family:var(--font-body);
+  font-size:12.5px;width:100%;outline:none;
+}
+.weight-input{
+  width:34px;background:transparent;border:1px solid var(--panel-border);border-radius:5px;
+  color:var(--accent);text-align:center;font-family:var(--font-mono);font-size:12px;outline:none;padding:2px;
+}
+.stars{cursor:pointer;letter-spacing:2px;color:var(--panel-border);user-select:none;}
+.stars .filled{color:var(--accent);}
+tr.score-row td{font-weight:700;color:var(--accent-2);background:var(--accent-soft);}
+.mini-btn{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);
+  border:1px dashed var(--panel-border);border-radius:6px;padding:5px 9px;cursor:pointer;
+  background:transparent;
+}
+.mini-btn:hover{color:var(--accent);border-color:var(--accent);}
+.matrix-actions{display:flex;gap:8px;margin-top:12px;}
+.rm{cursor:pointer;color:var(--rose);font-size:11px;margin-left:6px;}
+
+/* ---------- guided tables ---------- */
+.table-hint{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-bottom:10px;}
+table.guided{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.guided th{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-faint);text-align:left;padding:6px 10px;border-bottom:1px solid var(--panel-border);
+}
+table.guided td{padding:6px 10px;border-bottom:1px solid var(--panel-border);vertical-align:middle;}
+table.guided td input[type=text],table.guided td select{
+  width:100%;background:transparent;border:none;outline:none;color:var(--ink);
+  font-family:var(--font-body);font-size:12.5px;padding:3px 0;
+}
+table.guided td.type-cell input{font-family:var(--font-display);font-weight:600;color:var(--accent);font-size:12px;}
+table.guided select{cursor:pointer;background:var(--bg-elevated);border-radius:5px;padding:3px 5px;border:1px solid var(--panel-border);}
+table.guided .rm{cursor:pointer;color:var(--rose);font-size:11px;}
+.add-row-btn{margin-top:10px;}
+.status-badge{font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:20px;display:inline-block;white-space:nowrap;}
+.status-atteint{background:rgba(79,217,201,.16);color:var(--accent-2);}
+.status-encours{background:rgba(242,166,90,.16);color:var(--amber);}
+.status-nondémarré{background:rgba(150,140,255,.12);color:var(--ink-dim);}
+
+/* ---------- KPI synthesis ---------- */
+.kpi-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.kpi-stat{
+  flex:1;min-width:110px;border:1px solid var(--panel-border);border-radius:10px;
+  padding:12px 14px;text-align:center;background:var(--bg-elevated);
+}
+.kpi-stat .num{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--accent);}
+.kpi-stat .label{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+
+/* ---------- checklist ---------- */
+.checklist{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;}
+@media(max-width:760px){.checklist{grid-template-columns:1fr;}}
+.check-item{display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13px;}
+.check-item input[type=checkbox]{
+  appearance:none;width:16px;height:16px;border:1px solid var(--panel-border);border-radius:4px;
+  cursor:pointer;flex-shrink:0;position:relative;
+}
+.check-item input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent);}
+.check-item input[type=checkbox]:checked::after{
+  content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#0A0C16;font-size:11px;font-weight:700;
+}
+.check-item span.done{color:var(--ink-faint);text-decoration:line-through;}
+
+footer.hint{
+  text-align:center;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);
+  margin-top:20px;
+}
+
+/* ---------- print ---------- */
+@media print{
+  @page{ size:A4; margin:14mm; }
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{background:#fff;color:#111;padding:0;}
+  .topbar,.info-icon,.diagram-hint,.table-hint,.matrix-actions,footer.hint,.rm,.mini-btn,#fileInput{display:none !important;}
+  .wrap{max-width:100%;padding:0;}
+  .two-col{grid-template-columns:1fr;gap:10px;}
+  .section,.titleblock{border:1px solid #ccc;background:#fff;box-shadow:none;break-inside:avoid;page-break-inside:avoid;margin-bottom:10px;}
+  .section-title,.tb-field input,.tb-field select{color:#111;}
+  .section-head{border-bottom:1px solid #ddd;}
+  .section-num{border-color:#ccc;color:#6C5CE7;}
+  .section-body textarea{display:none;}
+  .print-mirror{
+    display:block;white-space:pre-wrap;word-wrap:break-word;
+    font-family:var(--font-body);font-size:11.5px;line-height:1.6;color:#111;min-height:16px;
+  }
+  #diagramOut{background:#fff !important;border-color:#ccc !important;}
+  .diagram-wrap{grid-template-columns:1fr;}
+  .diagram-input-col{display:none;}
+  table.guided select{background:#fff !important;border-color:#ccc !important;}
+  table.guided input,table.guided select,table.guided td,table.guided th{color:#111;}
+  table.guided td,table.guided th{border-color:#e5e5e5;}
+  .kpi-stat{background:#fff;border-color:#ccc;}
+  .kpi-stat .num,.kpi-stat .label{color:#111;}
+  .status-badge{background:#eee !important;color:#111 !important;border:1px solid #ccc;}
+  .print-footer{
+    display:block !important;text-align:center;font-family:var(--font-mono);
+    font-size:9.5px;color:#888;margin-top:14px;
+  }
+  a{color:#111;}
+}
+.print-footer{display:none;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>ARCHITECT WORKSPACE <small>v1.0 — local</small></div>
+  <span class="save-status" id="saveStatus">non enregistré</span>
+  <button class="btn" id="themeBtn">🌙 Thème</button>
+  <button class="btn" id="importBtn">📂 Importer</button>
+  <input type="file" id="fileInput" accept="application/json">
+  <button class="btn" id="exportBtn">💾 Exporter JSON</button>
+  <button class="btn primary" id="printBtn">🖨️ Exporter PDF</button>
+</div>
+
+<div class="wrap">
+
+  <div class="titleblock">
+    <div class="tb-field wide">
+      <label>Projet</label>
+      <input type="text" id="f-projet" placeholder="Nom du projet">
+    </div>
+    <div class="tb-field">
+      <label>Statut</label>
+      <select id="f-statut">
+        <option>Idée</option>
+        <option>POC</option>
+        <option>PROD</option>
+      </select>
+    </div>
+    <div class="tb-field">
+      <label>Auteur</label>
+      <input type="text" id="f-auteur" placeholder="Toi">
+    </div>
+    <div class="tb-field">
+      <label>Date</label>
+      <input type="text" id="f-date" placeholder="jj/mm/aaaa">
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="section" data-field="pourquoi">
+      <div class="section-head">
+        <span class="section-num">01</span><span class="section-icon">💡</span>
+        <span class="section-title">Pourquoi ?</span>
+        <span class="info-icon">i<span class="tip">Ex : « Le monitoring actuel ne couvre pas les containers Docker, on découvre les pannes après coup par les utilisateurs. »</span></span>
+      </div>
+      <div class="section-body"><textarea placeholder="Le problème ou le déclencheur du projet."></textarea></div>
+    </div>
+    <div class="section" data-field="objectifs">
+      <div class="section-head">
+        <span class="section-num">02</span><span class="section-icon">🎯</span>
+        <span class="section-title">Objectifs</span>
+        <span class="info-icon">i<span class="tip">Ex : « Centraliser la supervision, réduire le MTTR de 50%, avoir une alerte avant l'utilisateur. »</span></span>
+      </div>
+      <div class="section-body"><textarea placeholder="Ce que le projet doit atteindre, mesurable si possible."></textarea></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="section" data-field="constat">
+      <div class="section-head">
+        <span class="section-num">03</span><span class="section-icon">🔍</span>
+        <span class="section-title">Constat actuel</span>
+        <span class="info-icon">i<span class="tip">Ex : « Aucun outil ne relie décision, schéma et export pro. On a des bouts épars (draw.io, Notion, Excel). »</span></span>
+      </div>
+      <div class="section-body"><textarea placeholder="État des lieux, ce qui existe déjà, ce qui manque."></textarea></div>
+    </div>
+    <div class="section" data-field="acteurs">
+      <div class="section-head">
+        <span class="section-num">04</span><span class="section-icon">🧑</span>
+        <span class="section-title">Acteurs</span>
+        <span class="info-icon">i<span class="tip">Types d'acteurs courants en archi. Renomme, complète ou supprime les lignes selon ton projet.</span></span>
+      </div>
+      <div class="section-body">
+        <div class="table-hint">Qui est concerné, impliqué, ou décisionnaire — par type.</div>
+        <table class="guided" id="table-acteurs"></table>
+        <button class="mini-btn add-row-btn" data-add="acteurs">+ acteur</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" data-field="diagramme">
+    <div class="section-head">
+      <span class="section-num">05</span><span class="section-icon">🏗️</span>
+      <span class="section-title">Architecture — schéma simple</span>
+      <span class="info-icon">i<span class="tip">Écris une étape par ligne, dans l'ordre du flux. Chaque ligne devient une boîte reliée à la suivante par une flèche.</span></span>
+    </div>
+    <div class="section-body">
+      <div class="diagram-wrap">
+        <div class="diagram-input-col">
+          <textarea id="diagramIn" placeholder="Internet
+Reverse Proxy
+Authentik
+Application
+Base de données" style="min-height:140px;"></textarea>
+          <div class="diagram-hint">Une étape par ligne → schéma généré à droite, automatiquement.</div>
+        </div>
+        <div id="diagramOut"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="section" data-field="contraintes">
+      <div class="section-head">
+        <span class="section-num">06</span><span class="section-icon">⚙️</span>
+        <span class="section-title">Contraintes</span>
+        <span class="info-icon">i<span class="tip">Types de contraintes à vérifier avant de foncer dans la technique.</span></span>
+      </div>
+      <div class="section-body">
+        <div class="table-hint">Technique, budget, temps, humain — une ligne par type.</div>
+        <table class="guided" id="table-contraintes"></table>
+        <button class="mini-btn add-row-btn" data-add="contraintes">+ contrainte</button>
+      </div>
+    </div>
+    <div class="section" data-field="criteres">
+      <div class="section-head">
+        <span class="section-num">07</span><span class="section-icon">✅</span>
+        <span class="section-title">Critères de réussite</span>
+        <span class="info-icon">i<span class="tip">Transforme chaque critère en indicateur mesurable (KPI) avec une cible chiffrée — c'est ce qui valide que le projet est réussi, et ça alimente la synthèse KPI en fin de document.</span></span>
+      </div>
+      <div class="section-body">
+        <div class="table-hint">Critère → indicateur → cible → statut. Chaque ligne devient une entrée dans la synthèse KPI.</div>
+        <table class="guided" id="table-criteres"></table>
+        <button class="mini-btn add-row-btn" data-add="criteres">+ critère</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="section" data-field="securite">
+      <div class="section-head">
+        <span class="section-num">08</span><span class="section-icon">🔐</span>
+        <span class="section-title">Sécurité</span>
+        <span class="info-icon">i<span class="tip">Types de sécurité à couvrir, même pour un petit projet perso.</span></span>
+      </div>
+      <div class="section-body">
+        <div class="table-hint">Auth, chiffrement, exposition, conformité — coche l'état prévu.</div>
+        <table class="guided" id="table-securite"></table>
+        <button class="mini-btn add-row-btn" data-add="securite">+ aspect</button>
+      </div>
+    </div>
+    <div class="section" data-field="evolutions">
+      <div class="section-head">
+        <span class="section-num">09</span><span class="section-icon">📈</span>
+        <span class="section-title">Évolutions futures</span>
+        <span class="info-icon">i<span class="tip">Ex : « V2 : éditeur de schéma drag & drop. V3 : bibliothèque de modèles pré-remplis. »</span></span>
+      </div>
+      <div class="section-body"><textarea placeholder="Ce qui viendra après la V1."></textarea></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="section" data-field="risques">
+      <div class="section-head">
+        <span class="section-num">10</span><span class="section-icon">⚠️</span>
+        <span class="section-title">Risques</span>
+        <span class="info-icon">i<span class="tip">Ex : « Scope creep si on attaque la V2 avant que la V1 serve réellement. »</span></span>
+      </div>
+      <div class="section-body"><textarea placeholder="Ce qui peut mal tourner, et l'impact."></textarea></div>
+    </div>
+    <div class="section" data-field="questions">
+      <div class="section-head">
+        <span class="section-num">11</span><span class="section-icon">❓</span>
+        <span class="section-title">Questions ouvertes</span>
+        <span class="info-icon">i<span class="tip">Ex : « Qui administre en prod ? Comment on revient en arrière si ça échoue ? »</span></span>
+      </div>
+      <div class="section-body"><textarea placeholder="Ce qui n'est pas encore tranché."></textarea></div>
+    </div>
+  </div>
+
+  <!-- Decision matrix -->
+  <div class="section" data-field="matrice">
+    <div class="section-head">
+      <span class="section-num">12</span><span class="section-icon">📊</span>
+      <span class="section-title">Matrice de décision</span>
+      <span class="info-icon">i<span class="tip">Pondère chaque critère (1-5), note chaque solution en étoiles. Le score pondéré se calcule tout seul, la meilleure colonne est surlignée.</span></span>
+    </div>
+    <div class="section-body">
+      <div class="matrix-wrap">
+        <table class="matrix" id="matrixTable"></table>
+      </div>
+      <div class="matrix-actions">
+        <button class="mini-btn" id="addCriterion">+ critère</button>
+        <button class="mini-btn" id="addOption">+ solution</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checklist -->
+  <div class="section" data-field="checklist">
+    <div class="section-head">
+      <span class="section-num">13</span><span class="section-icon">📋</span>
+      <span class="section-title">Checklist Architecte</span>
+    </div>
+    <div class="section-body">
+      <div class="checklist" id="checklist"></div>
+    </div>
+  </div>
+
+  <div class="section" data-field="notes">
+    <div class="section-head">
+      <span class="section-num">14</span><span class="section-icon">💭</span>
+      <span class="section-title">Notes libres</span>
+    </div>
+    <div class="section-body"><textarea placeholder="Tout ce qui ne rentre pas ailleurs." style="min-height:60px;"></textarea></div>
+  </div>
+
+  <div class="section" data-field="kpi-summary">
+    <div class="section-head">
+      <span class="section-num">15</span><span class="section-icon">📊</span>
+      <span class="section-title">Synthèse KPI</span>
+      <span class="info-icon">i<span class="tip">Générée automatiquement à partir de la section « Critères de réussite ». C'est la dernière section du document, y compris à l'export PDF.</span></span>
+    </div>
+    <div class="section-body">
+      <div class="kpi-stats" id="kpiStats"></div>
+      <table class="guided" id="kpiTable"></table>
+    </div>
+  </div>
+
+  <footer class="hint">Architect Workspace — tout reste en local dans ce fichier / ton navigateur. Rien n'est envoyé nulle part.</footer>
+  <div class="print-footer" id="printFooter"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'architect-workspace-v1';
+const CHECKLIST_ITEMS = [
+  "Besoin métier identifié","Parties prenantes connues","Budget connu","Contraintes connues",
+  "Sauvegardes prévues","Authentification prévue","Supervision prévue","PRA réfléchi",
+  "Documentation prévue","Fin de vie envisagée"
+];
+
+/* ---------- theme ---------- */
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'light' ? '☀️ Thème' : '🌙 Thème';
+}
+themeBtn.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(cur);
+  scheduleSave();
+});
+
+/* ---------- checklist render ---------- */
+const checklistEl = document.getElementById('checklist');
+CHECKLIST_ITEMS.forEach((label, i) => {
+  const div = document.createElement('label');
+  div.className = 'check-item';
+  div.innerHTML = `<input type="checkbox" data-idx="${i}"><span>${label}</span>`;
+  checklistEl.appendChild(div);
+});
+checklistEl.addEventListener('change', e => {
+  if(e.target.matches('input[type=checkbox]')){
+    e.target.nextElementSibling.classList.toggle('done', e.target.checked);
+    renderKpiSummary();
+    scheduleSave();
+  }
+});
+
+/* ---------- diagram ---------- */
+const diagramIn = document.getElementById('diagramIn');
+const diagramOut = document.getElementById('diagramOut');
+function renderDiagram(forPrint){
+  const lines = diagramIn.value.split('\n').map(l => l.trim()).filter(l => l && !/^[↓→\-–>]+$/.test(l));
+  if(lines.length === 0){
+    diagramOut.innerHTML = '<span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-faint)">Le schéma apparaît ici</span>';
+    return;
+  }
+  const boxW = 220, boxH = 40, gap = 26, pad = 16;
+  const svgH = lines.length * boxH + (lines.length - 1) * gap + pad * 2;
+  const svgW = boxW + pad * 2;
+  let inkColor, accentColor, panelColor;
+  if(forPrint){
+    inkColor = '#111'; accentColor = '#6C5CE7'; panelColor = '#999';
+  } else {
+    inkColor = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim();
+    accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    panelColor = getComputedStyle(document.documentElement).getPropertyValue('--panel-border').trim();
+  }
+  let boxes = '';
+  lines.forEach((label, i) => {
+    const y = pad + i * (boxH + gap);
+    boxes += `<rect x="${pad}" y="${y}" width="${boxW}" height="${boxH}" rx="8" fill="none" stroke="${accentColor}" stroke-width="1.4"/>`;
+    boxes += `<text x="${pad + boxW/2}" y="${y + boxH/2 + 4}" text-anchor="middle" font-size="12" fill="${inkColor}">${escapeHtml(label).slice(0,28)}</text>`;
+    if(i < lines.length - 1){
+      const y1 = y + boxH, y2 = y + boxH + gap;
+      const xMid = pad + boxW/2;
+      boxes += `<line x1="${xMid}" y1="${y1}" x2="${xMid}" y2="${y2-6}" stroke="${panelColor}" stroke-width="1.4"/>`;
+      boxes += `<polygon points="${xMid-5},${y2-10} ${xMid+5},${y2-10} ${xMid},${y2-2}" fill="${accentColor}"/>`;
+    }
+  });
+  diagramOut.innerHTML = `<svg viewBox="0 0 ${svgW} ${svgH}" width="100%" style="max-width:${svgW}px">${boxes}</svg>`;
+}
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+diagramIn.addEventListener('input', () => { renderDiagram(); scheduleSave(); });
+
+/* ---------- guided tables (acteurs / contraintes / sécurité / critères-KPI) ---------- */
+let guidedState = {
+  acteurs: [
+    {type:'Sponsor / décideur', detail:''},
+    {type:'Utilisateurs finaux', detail:''},
+    {type:'Équipe technique / exploitants', detail:''},
+    {type:'Partenaires / prestataires externes', detail:''}
+  ],
+  contraintes: [
+    {type:'Budget', detail:''},
+    {type:'Technique', detail:''},
+    {type:'Temps / délai', detail:''},
+    {type:'Réglementaire / conformité', detail:''},
+    {type:'Humain / organisationnel', detail:''}
+  ],
+  securite: [
+    {type:'Authentification', etat:'À définir', detail:''},
+    {type:'Chiffrement (transit / repos)', etat:'À définir', detail:''},
+    {type:'Exposition réseau', etat:'À définir', detail:''},
+    {type:'Conformité / RGPD', etat:'À définir', detail:''},
+    {type:'Journalisation & supervision', etat:'À définir', detail:''},
+    {type:'Sauvegarde & continuité', etat:'À définir', detail:''}
+  ],
+  criteres: [
+    {critere:'', kpi:'', cible:'', statut:'Non démarré'},
+    {critere:'', kpi:'', cible:'', statut:'Non démarré'}
+  ]
+};
+
+function renderTypedTable(containerId, key){
+  const rows = guidedState[key];
+  const container = document.getElementById(containerId);
+  let html = '<thead><tr><th style="width:38%">Type</th><th>Détail</th><th style="width:20px"></th></tr></thead><tbody>';
+  rows.forEach((row,i) => {
+    html += `<tr>
+      <td class="type-cell"><input type="text" data-key="${key}" data-idx="${i}" data-field="type" value="${escapeAttr(row.type)}"></td>
+      <td><input type="text" data-key="${key}" data-idx="${i}" data-field="detail" value="${escapeAttr(row.detail)}" placeholder="..."></td>
+      <td><span class="rm" data-remove="${key}" data-idx="${i}">✕</span></td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  container.innerHTML = html;
+}
+
+function renderSecuriteTable(){
+  const rows = guidedState.securite;
+  const container = document.getElementById('table-securite');
+  const opts = ['À définir','Prévu','Non applicable'];
+  let html = '<thead><tr><th style="width:32%">Aspect</th><th style="width:120px">État</th><th>Détail</th><th style="width:20px"></th></tr></thead><tbody>';
+  rows.forEach((row,i) => {
+    html += `<tr>
+      <td class="type-cell"><input type="text" data-key="securite" data-idx="${i}" data-field="type" value="${escapeAttr(row.type)}"></td>
+      <td><select data-key="securite" data-idx="${i}" data-field="etat">${opts.map(o=>`<option ${o===row.etat?'selected':''}>${o}</option>`).join('')}</select></td>
+      <td><input type="text" data-key="securite" data-idx="${i}" data-field="detail" value="${escapeAttr(row.detail)}" placeholder="..."></td>
+      <td><span class="rm" data-remove="securite" data-idx="${i}">✕</span></td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  container.innerHTML = html;
+}
+
+function renderCriteresTable(){
+  const rows = guidedState.criteres;
+  const container = document.getElementById('table-criteres');
+  const opts = ['Non démarré','En cours','Atteint'];
+  let html = '<thead><tr><th style="width:26%">Critère</th><th style="width:24%">Indicateur (KPI)</th><th style="width:16%">Cible</th><th style="width:120px">Statut</th><th style="width:20px"></th></tr></thead><tbody>';
+  rows.forEach((row,i) => {
+    html += `<tr>
+      <td><input type="text" data-key="criteres" data-idx="${i}" data-field="critere" value="${escapeAttr(row.critere)}" placeholder="Ex : Temps de restauration"></td>
+      <td><input type="text" data-key="criteres" data-idx="${i}" data-field="kpi" value="${escapeAttr(row.kpi)}" placeholder="Ex : RTO mesuré"></td>
+      <td><input type="text" data-key="criteres" data-idx="${i}" data-field="cible" value="${escapeAttr(row.cible)}" placeholder="Ex : < 2h"></td>
+      <td><select data-key="criteres" data-idx="${i}" data-field="statut">${opts.map(o=>`<option ${o===row.statut?'selected':''}>${o}</option>`).join('')}</select></td>
+      <td><span class="rm" data-remove="criteres" data-idx="${i}">✕</span></td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  container.innerHTML = html;
+  renderKpiSummary();
+}
+
+function statusClass(s){
+  if(s === 'Atteint') return 'status-atteint';
+  if(s === 'En cours') return 'status-encours';
+  return 'status-nondémarré';
+}
+
+function renderKpiSummary(){
+  const rows = guidedState.criteres;
+  const total = rows.length;
+  const atteint = rows.filter(r=>r.statut==='Atteint').length;
+  const encours = rows.filter(r=>r.statut==='En cours').length;
+  const nondemarre = total - atteint - encours;
+  const checksDone = [...checklistEl.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).length;
+  document.getElementById('kpiStats').innerHTML = `
+    <div class="kpi-stat"><div class="num">${total}</div><div class="label">Critères</div></div>
+    <div class="kpi-stat"><div class="num">${atteint}</div><div class="label">Atteints</div></div>
+    <div class="kpi-stat"><div class="num">${encours}</div><div class="label">En cours</div></div>
+    <div class="kpi-stat"><div class="num">${nondemarre}</div><div class="label">Non démarrés</div></div>
+    <div class="kpi-stat"><div class="num">${checksDone}/${CHECKLIST_ITEMS.length}</div><div class="label">Checklist</div></div>`;
+  const filled = rows.filter(r => r.critere.trim() || r.kpi.trim());
+  let html = '<thead><tr><th>Critère</th><th>Indicateur</th><th>Cible</th><th>Statut</th></tr></thead><tbody>';
+  if(filled.length === 0){
+    html += '<tr><td colspan="4" style="color:var(--ink-faint);font-style:italic;">Remplis la section « Critères de réussite » plus haut pour voir apparaître la synthèse.</td></tr>';
+  } else {
+    filled.forEach(r => {
+      html += `<tr><td>${escapeHtml(r.critere)||'—'}</td><td>${escapeHtml(r.kpi)||'—'}</td><td>${escapeHtml(r.cible)||'—'}</td><td><span class="status-badge ${statusClass(r.statut)}">${r.statut}</span></td></tr>`;
+    });
+  }
+  html += '</tbody>';
+  document.getElementById('kpiTable').innerHTML = html;
+}
+
+function renderAllGuided(){
+  renderTypedTable('table-acteurs','acteurs');
+  renderTypedTable('table-contraintes','contraintes');
+  renderSecuriteTable();
+  renderCriteresTable(); // also renders KPI summary
+}
+
+function rerenderKey(key){
+  if(key === 'acteurs') renderTypedTable('table-acteurs','acteurs');
+  else if(key === 'contraintes') renderTypedTable('table-contraintes','contraintes');
+  else if(key === 'securite') renderSecuriteTable();
+  else if(key === 'criteres') renderCriteresTable();
+}
+
+const wrapEl = document.querySelector('.wrap');
+wrapEl.addEventListener('input', e => {
+  if(e.target.matches('input[data-key]')){
+    const {key, idx, field} = e.target.dataset;
+    guidedState[key][idx][field] = e.target.value;
+    if(key === 'criteres') renderKpiSummary();
+    scheduleSave();
+  }
+});
+wrapEl.addEventListener('change', e => {
+  if(e.target.matches('select[data-key]')){
+    const {key, idx, field} = e.target.dataset;
+    guidedState[key][idx][field] = e.target.value;
+    if(key === 'criteres') renderKpiSummary();
+    scheduleSave();
+  }
+});
+wrapEl.addEventListener('click', e => {
+  if(e.target.matches('[data-remove]')){
+    const key = e.target.dataset.remove, idx = e.target.dataset.idx;
+    guidedState[key].splice(Number(idx),1);
+    rerenderKey(key);
+    scheduleSave();
+  }
+  if(e.target.matches('[data-add]')){
+    const key = e.target.dataset.add;
+    if(key === 'securite') guidedState.securite.push({type:'Nouvel aspect', etat:'À définir', detail:''});
+    else if(key === 'criteres') guidedState.criteres.push({critere:'', kpi:'', cible:'', statut:'Non démarré'});
+    else guidedState[key].push({type:'Autre', detail:''});
+    rerenderKey(key);
+    scheduleSave();
+  }
+});
+
+/* ---------- decision matrix ---------- */
+let matrixState = {
+  criteria: [{label:'Coût', weight:5}, {label:'Maintenance', weight:4}, {label:'Sécurité', weight:5}],
+  options: ['Solution A', 'Solution B'],
+  ratings: {} // key `${critIdx}-${optIdx}` -> 1..5
+};
+function ratingKey(c,o){ return c+'-'+o; }
+function renderMatrix(){
+  const table = document.getElementById('matrixTable');
+  let html = '<thead><tr><th style="text-align:left">Critère</th><th>Poids</th>';
+  matrixState.options.forEach((opt,oi) => {
+    html += `<th><input data-opt="${oi}" value="${escapeAttr(opt)}"><span class="rm" data-rm-opt="${oi}">✕</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+  matrixState.criteria.forEach((crit,ci) => {
+    html += `<tr><td class="crit-label"><input data-crit="${ci}" value="${escapeAttr(crit.label)}"><span class="rm" data-rm-crit="${ci}">✕</span></td>`;
+    html += `<td><input class="weight-input" type="number" min="1" max="5" data-weight="${ci}" value="${crit.weight}"></td>`;
+    matrixState.options.forEach((opt,oi) => {
+      const r = matrixState.ratings[ratingKey(ci,oi)] || 0;
+      let stars = '';
+      for(let s=1; s<=5; s++){ stars += `<span class="${s<=r?'filled':''}" data-star="${s}">★</span>`; }
+      html += `<td><span class="stars" data-crit-idx="${ci}" data-opt-idx="${oi}">${stars}</span></td>`;
+    });
+    html += '</tr>';
+  });
+  // score row
+  html += '<tr class="score-row"><td colspan="2">Score pondéré</td>';
+  const totalWeight = matrixState.criteria.reduce((s,c)=>s+Number(c.weight||0),0) || 1;
+  let scores = matrixState.options.map((opt,oi) => {
+    let sum = 0;
+    matrixState.criteria.forEach((crit,ci) => {
+      sum += (matrixState.ratings[ratingKey(ci,oi)] || 0) * Number(crit.weight||0);
+    });
+    return sum / totalWeight;
+  });
+  const maxScore = Math.max(...scores, 0);
+  scores.forEach(sc => {
+    const isBest = sc === maxScore && sc > 0;
+    html += `<td style="${isBest?'outline:2px solid var(--accent-2)':''}">${sc.toFixed(2)}</td>`;
+  });
+  html += '</tr></tbody>';
+  table.innerHTML = html;
+}
+function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+
+document.getElementById('addCriterion').addEventListener('click', () => {
+  matrixState.criteria.push({label:'Nouveau critère', weight:3});
+  renderMatrix(); scheduleSave();
+});
+document.getElementById('addOption').addEventListener('click', () => {
+  matrixState.options.push('Nouvelle solution');
+  renderMatrix(); scheduleSave();
+});
+document.getElementById('matrixTable').addEventListener('click', e => {
+  if(e.target.matches('[data-star]')){
+    const span = e.target.closest('[data-crit-idx]');
+    const ci = span.dataset.critIdx, oi = span.dataset.optIdx;
+    matrixState.ratings[ratingKey(ci,oi)] = Number(e.target.dataset.star);
+    renderMatrix(); scheduleSave();
+  }
+  if(e.target.matches('[data-rm-opt]')){
+    matrixState.options.splice(Number(e.target.dataset.rmOpt),1);
+    renderMatrix(); scheduleSave();
+  }
+  if(e.target.matches('[data-rm-crit]')){
+    matrixState.criteria.splice(Number(e.target.dataset.rmCrit),1);
+    renderMatrix(); scheduleSave();
+  }
+});
+document.getElementById('matrixTable').addEventListener('input', e => {
+  if(e.target.matches('[data-opt]')){ matrixState.options[e.target.dataset.opt] = e.target.value; scheduleSave(); }
+  if(e.target.matches('[data-crit]')){ matrixState.criteria[e.target.dataset.crit].label = e.target.value; scheduleSave(); }
+  if(e.target.matches('[data-weight]')){ matrixState.criteria[e.target.dataset.weight].weight = Number(e.target.value)||1; renderMatrix(); scheduleSave(); }
+});
+
+/* ---------- save / load ---------- */
+const saveStatus = document.getElementById('saveStatus');
+let saveTimer = null;
+function scheduleSave(){
+  saveStatus.textContent = 'modification...';
+  saveStatus.classList.remove('on');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 500);
+}
+function collectState(){
+  const sections = {};
+  document.querySelectorAll('.section[data-field] textarea').forEach(t => {
+    const field = t.closest('.section').dataset.field;
+    if(field !== 'diagramme') sections[field] = t.value;
+  });
+  const checks = [...checklistEl.querySelectorAll('input[type=checkbox]')].map(c => c.checked);
+  return {
+    projet: document.getElementById('f-projet').value,
+    statut: document.getElementById('f-statut').value,
+    auteur: document.getElementById('f-auteur').value,
+    date: document.getElementById('f-date').value,
+    theme: document.documentElement.getAttribute('data-theme') || 'dark',
+    sections,
+    diagramme: diagramIn.value,
+    matrix: matrixState,
+    guided: guidedState,
+    checks
+  };
+}
+function doSave(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+  saveStatus.textContent = 'enregistré ✓';
+  saveStatus.classList.add('on');
+}
+function applyState(state){
+  if(!state) return;
+  document.getElementById('f-projet').value = state.projet || '';
+  document.getElementById('f-statut').value = state.statut || 'Idée';
+  document.getElementById('f-auteur').value = state.auteur || '';
+  document.getElementById('f-date').value = state.date || '';
+  applyTheme(state.theme || 'dark');
+  document.querySelectorAll('.section[data-field] textarea').forEach(t => {
+    const field = t.closest('.section').dataset.field;
+    if(field !== 'diagramme' && state.sections && state.sections[field] !== undefined){
+      t.value = state.sections[field];
+    }
+  });
+  diagramIn.value = state.diagramme || '';
+  renderDiagram();
+  if(state.matrix) matrixState = state.matrix;
+  renderMatrix();
+  if(state.guided) guidedState = state.guided;
+  renderAllGuided();
+  if(state.checks){
+    [...checklistEl.querySelectorAll('input[type=checkbox]')].forEach((c,i) => {
+      c.checked = !!state.checks[i];
+      c.nextElementSibling.classList.toggle('done', c.checked);
+    });
+  }
+  renderKpiSummary();
+}
+
+/* ---------- export / import ---------- */
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const state = collectState();
+  const name = (state.projet || 'architect-workspace').trim().replace(/[^a-z0-9\-_]+/gi,'_') || 'architect-workspace';
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name + '.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const state = JSON.parse(reader.result);
+      applyState(state);
+      doSave();
+    }catch(err){ alert("Fichier JSON invalide."); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+/* ---------- print rendering ---------- */
+function preparePrintMirrors(){
+  document.querySelectorAll('.section-body textarea').forEach(t => {
+    if(t.id === 'diagramIn') return; // diagram has its own SVG render
+    let mirror = t.nextElementSibling;
+    if(!mirror || !mirror.classList.contains('print-mirror')){
+      mirror = document.createElement('div');
+      mirror.className = 'print-mirror';
+      t.insertAdjacentElement('afterend', mirror);
+    }
+    mirror.textContent = t.value.trim() || '—';
+  });
+  const projet = document.getElementById('f-projet').value || 'Projet sans nom';
+  const date = document.getElementById('f-date').value || '';
+  const footer = document.getElementById('printFooter');
+  if(footer) footer.textContent = `${projet} — généré avec Architect Workspace${date ? ' — ' + date : ''}`;
+}
+window.addEventListener('beforeprint', () => { preparePrintMirrors(); renderDiagram(true); });
+window.addEventListener('afterprint', () => { renderDiagram(false); });
+
+/* ---------- global input listeners ---------- */
+document.querySelectorAll('.titleblock input, .titleblock select').forEach(el => {
+  el.addEventListener('input', scheduleSave);
+  el.addEventListener('change', scheduleSave);
+});
+document.querySelectorAll('.section[data-field] textarea').forEach(t => {
+  t.addEventListener('input', scheduleSave);
+});
+
+/* ---------- init ---------- */
+(function init(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try{ applyState(JSON.parse(raw)); }catch(e){ applyTheme('dark'); renderDiagram(); renderMatrix(); renderAllGuided(); }
+  } else {
+    applyTheme('dark');
+    if(!document.getElementById('f-date').value){
+      const d = new Date();
+      document.getElementById('f-date').value = String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+    }
+    renderDiagram();
+    renderMatrix();
+    renderAllGuided();
+  }
+  saveStatus.textContent = raw ? 'chargé ✓' : 'prêt';
+})();
+</script>
+</body>
+</html>
